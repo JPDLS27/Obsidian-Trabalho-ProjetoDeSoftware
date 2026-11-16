@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obsidian no Projeto de Software — CompiuterZ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#161618; --bg2:#1e1e21; --bg3:#26262b; --line:#34343b;
+  --tx:#dcddde; --tx2:#a3a3ad; --tx3:#71717a;
+  --ac:#8b6cf6; --ac2:#a88bfa; --acbg:rgba(139,108,246,.14);
+  --uc:#38bdf8; --rf:#a88bfa; --rn:#f59e0b; --at:#34d399;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:Inter,system-ui,sans-serif;overflow:hidden}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+a{color:var(--ac2)}
+.deck{position:relative;width:100vw;height:100vh}
+.slide{position:absolute;inset:0;padding:56px 72px 84px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateX(30px);transition:opacity .35s,transform .35s;overflow:auto}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.slide.prev{transform:translateX(-30px)}
+.kicker{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ac2);font-weight:700;margin-bottom:10px}
+h1{font-size:clamp(40px,6vw,76px);font-weight:800;line-height:1.02;letter-spacing:-.02em}
+h2{font-size:clamp(28px,3.4vw,44px);font-weight:800;letter-spacing:-.015em;margin-bottom:22px;line-height:1.1}
+h3{font-size:18px;font-weight:700;margin-bottom:6px}
+p,li{font-size:clamp(15px,1.25vw,19px);line-height:1.55;color:var(--tx)}
+.muted{color:var(--tx2)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.card p{font-size:15px;color:var(--tx2)}
+.ic{width:38px;height:38px;border-radius:10px;background:var(--acbg);display:grid;place-items:center;margin-bottom:12px;color:var(--ac2)}
+.ic svg{width:20px;height:20px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--bg3);color:var(--tx2);border:1px solid var(--line)}
+.hl{color:var(--ac2);font-weight:700}
+.fill{flex:1;min-height:0}
+.center{justify-content:center}
+/* nav */
+.bar{position:fixed;left:0;right:0;bottom:0;height:56px;display:flex;align-items:center;gap:14px;padding:0 22px;background:linear-gradient(transparent,rgba(0,0,0,.5));z-index:20}
+.bar button{background:var(--bg3);border:1px solid var(--line);color:var(--tx);border-radius:9px;height:34px;min-width:34px;padding:0 10px;cursor:pointer;font:600 13px Inter}
+.bar button:hover{border-color:var(--ac)}
+.dots{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
+.bar .dot{min-width:0;width:8px;height:8px;border-radius:99px;background:var(--line);cursor:pointer;border:0;padding:0;transition:.2s}
+.bar .dot.on{background:var(--ac);width:22px}
+.count{font:600 13px "JetBrains Mono";color:var(--tx2);min-width:60px;text-align:right}
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--ac);z-index:21;transition:width .3s}
+.tag{position:absolute;top:20px;right:28px;font-size:12px;color:var(--tx3)}
+/* capa */
+.cover{justify-content:center;background:radial-gradient(1000px 600px at 85% 20%,rgba(139,108,246,.22),transparent 60%),radial-gradient(700px 500px at 0% 100%,rgba(56,189,248,.08),transparent 60%)}
+.logo{width:84px;height:84px;margin-bottom:28px}
+.team{display:flex;flex-wrap:wrap;gap:8px;margin-top:34px}
+.coverbg{position:absolute;right:-40px;top:0;bottom:0;width:48%;opacity:.5;pointer-events:none}
+/* vault mock */
+.app{display:grid;grid-template-columns:230px 1fr 250px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;height:100%;min-height:380px}
+.pane{overflow:auto;padding:14px}
+.pane+.pane{border-left:1px solid var(--line)}
+.ptitle{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);font-weight:700;margin:4px 0 8px}
+.tree details{margin-bottom:2px}
+.tree summary{cursor:pointer;font-size:13px;color:var(--tx2);padding:3px 4px;border-radius:6px;list-style:none}
+.tree summary::before{content:"▸ ";color:var(--tx3)}
+.tree details[open]>summary::before{content:"▾ "}
+.tree .f{display:block;font-size:13px;color:var(--tx2);padding:3px 6px 3px 18px;border-radius:6px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tree .f:hover{background:var(--bg3)}
+.tree .f.on{background:var(--acbg);color:var(--ac2)}
+.note{padding:22px 30px}
+.note h4{font-size:24px;font-weight:800;margin-bottom:12px}
+.props{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:16px;font-size:13px;display:grid;grid-template-columns:110px 1fr;gap:5px 10px}
+.props span:nth-child(odd){color:var(--tx3)}
+.note p,.note li{font-size:15px}
+.note ul,.note ol{padding-left:20px;margin:6px 0 12px}
+.wl{color:var(--ac2);cursor:pointer;text-decoration:none;border-bottom:1px dashed transparent}
+.wl:hover{border-bottom-color:var(--ac2)}
+.bl{font-size:13px;padding:7px 9px;border-radius:8px;background:var(--bg3);margin-bottom:6px;cursor:pointer}
+.bl:hover{outline:1px solid var(--ac)}
+.bl small{display:block;color:var(--tx3);font-size:11px}
+.crumbs{font-size:12px;color:var(--tx3);margin-bottom:6px}
+/* graph */
+.graphwrap{position:relative;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;height:100%;min-height:380px}
+#graph{width:100%;height:100%;display:block;cursor:grab}
+.legend{position:absolute;left:14px;top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.legend label{font-size:12px;display:flex;align-items:center;gap:6px;background:var(--bg3);padding:5px 9px;border-radius:99px;cursor:pointer;border:1px solid var(--line)}
+.legend i{width:10px;height:10px;border-radius:99px;display:inline-block}
+.ginfo{position:absolute;right:14px;top:12px;width:260px;background:rgba(30,30,33,.94);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:13px;color:var(--tx2);min-height:40px}
+.ginfo b{color:var(--tx)}
+/* bases */
+.btool{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.btool input,.btool select{background:var(--bg3);border:1px solid var(--line);color:var(--tx);border-radius:9px;height:36px;padding:0 10px;font:14px Inter}
+.btool input{flex:1;min-width:180px}
+.tbl{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);overflow:auto;max-height:100%}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{position:sticky;top:0;background:var(--bg3);text-align:left;font-weight:600;color:var(--tx2);padding:9px 12px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+td{padding:8px 12px;border-top:1px solid var(--line);vertical-align:top}
+td .wl{font-weight:600}
+.chip{display:inline-block;font-size:12px;padding:1px 7px;border-radius:6px;margin:1px 3px 1px 0;background:rgba(245,158,11,.13);color:#fbbf24}
+.chip.uc{background:rgba(56,189,248,.13);color:#7dd3fc}
+.yaml{background:#111113;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:13px;line-height:1.55;color:#c4c4cc;white-space:pre;overflow:auto}
+.yaml .k{color:#a88bfa}.yaml .s{color:#86efac}.yaml .c{color:#71717a}
+/* canvas */
+.canvas{position:relative;background-color:var(--bg2);background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:22px 22px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;height:100%;min-height:380px}
+.canvas svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ccard{position:absolute;width:200px;background:var(--bg3);border:1px solid var(--line);border-top:3px solid var(--c,var(--ac));border-radius:10px;padding:10px 12px;cursor:grab;user-select:none;font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.ccard b{display:block;font-size:14px;margin-bottom:3px}
+.ccard span{color:var(--tx2)}
+.ccard:active{cursor:grabbing}
+/* mermaid */
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{background:var(--bg3);border:1px solid var(--line);color:var(--tx2);padding:7px 12px;border-radius:9px;cursor:pointer;font:600 13px Inter}
+.tabs button.on{background:var(--acbg);color:var(--ac2);border-color:var(--ac)}
+#mmView{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:12px;height:100%;overflow:auto;display:flex;justify-content:center}
+#mmView svg{max-width:100%;height:auto}
+/* timeline */
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.step{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:600;color:var(--tx2)}
+.step small{display:block;font-size:11px;color:var(--tx3);font-weight:500}
+.step.on{border-color:var(--ac);background:var(--acbg);color:var(--tx)}
+.stepbody{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:start}
+.md{background:#111113;border:1px solid var(--line);border-radius:12px;padding:16px;font:13px/1.6 "JetBrains Mono",monospace;color:#c4c4cc;white-space:pre-wrap}
+.md .h{color:#a88bfa;font-weight:600}.md .l{color:#93c5fd}.md .t{color:#86efac}.md .y{color:#71717a}
+/* pros/cons */
+.pc li{list-style:none;padding:10px 0 10px 30px;position:relative;border-bottom:1px solid var(--line);font-size:16px}
+.pc li::before{position:absolute;left:0;top:9px;font-weight:800}
+.pros li::before{content:"✓";color:var(--at)}
+.cons li::before{content:"!";color:var(--rn);left:6px}
+.big{font-size:clamp(20px,2vw,28px);line-height:1.45;font-weight:500;max-width:1000px}
+.src li{font-size:15px;margin-bottom:9px;list-style:none;padding-left:0}
+.src li span{color:var(--tx3);font-size:13px}
+.obj{display:flex;gap:16px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--line)}
+.obj .n{font:800 30px "JetBrains Mono";color:var(--ac);min-width:56px}
+.split{display:grid;grid-template-columns:1fr 1.35fr;gap:26px;align-items:stretch}
+.kbd{font:600 12px "JetBrains Mono";background:var(--bg3);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px}
+@media (max-width:900px){
+  .slide{padding:36px 22px 80px}
+  .g3,.g4,.g2,.split,.stepbody{grid-template-columns:1fr}
+  .app{grid-template-columns:1fr}.app .pane:first-child,.app .pane:last-child{max-height:150px}
+  .ginfo{display:none}
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="deck" id="deck">
+
+<!-- 1 CAPA -->
+<section class="slide cover" data-title="Capa">
+  <svg class="coverbg" viewBox="0 0 500 600" id="coverGraph"></svg>
+  <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
+    <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c4b5fd"/><stop offset="1" stop-color="#6d28d9"/></linearGradient></defs>
+    <path d="M50 4 L82 26 L90 62 L62 96 L30 90 L12 56 L22 20 Z" fill="url(#lg)"/>
+    <path d="M50 4 L62 40 L62 96 M62 40 L90 62 M62 40 L22 20 M62 40 L30 90" stroke="rgba(255,255,255,.35)" stroke-width="2" fill="none"/>
+  </svg>
+  <div class="kicker">Seminário de Ferramentas · Projeto de Software</div>
+  <h1>Obsidian<br><span style="color:var(--ac2)">o "segundo cérebro"</span><br>do CompiuterZ</h1>
+  <p class="muted" style="margin-top:20px;max-width:620px">Como uma ferramenta de notas em Markdown, com links entre si, pode organizar requisitos, casos de uso e decisões do nosso projeto.</p>
+  <div class="team">
+    <span class="pill">Ana Carolina Fanderuff Mellek</span><span class="pill">Gustavo Tormena</span><span class="pill">João Alvin Odorizzi</span><span class="pill">João Paulo de Lima</span><span class="pill">Samuel Ramiro da Costa Alfarth</span>
+  </div>
+  <p class="muted" style="margin-top:22px;font-size:14px">FURB · Ciência da Computação · Blumenau, novembro de 2026 &nbsp;·&nbsp; use <span class="kbd">←</span> <span class="kbd">→</span> para navegar</p>
+</section>
+
+<!-- 2 OBJETIVO -->
+<section class="slide center" data-title="Objetivo">
+  <div class="kicker">Objetivo</div>
+  <h2>O que queremos mostrar</h2>
+  <div class="obj"><div class="n">01</div><div><h3>Apresentar o Obsidian</h3><p class="muted">O que é, como funciona e quais são suas principais características e funcionalidades.</p></div></div>
+  <div class="obj"><div class="n">02</div><div><h3>Demonstrar na prática</h3><p class="muted">Com demos interativas montadas a partir dos dados reais do nosso documento: 18 casos de uso, 29 requisitos funcionais e 26 regras de negócio.</p></div></div>
+  <div class="obj" style="border:0"><div class="n">03</div><div><h3>Aplicar ao CompiuterZ</h3><p class="muted">Explicar como a ferramenta apoiaria cada etapa do processo do projeto de software, da especificação até o desenvolvimento.</p></div></div>
+</section>
+
+<!-- 3 O QUE É -->
+<section class="slide" data-title="O que é">
+  <div class="kicker">Características</div>
+  <h2>O que é o Obsidian?</h2>
+  <div class="split">
+    <div>
+      <p class="big">Um aplicativo de <span class="hl">base de conhecimento</span> que trabalha com <span class="hl">arquivos Markdown (.md) locais</span>, ligados entre si por links.</p>
+      <p class="muted" style="margin-top:18px">Cada nota é um arquivo de texto comum dentro de uma pasta, chamada de <b>vault</b> (cofre). Não existe banco de dados próprio, nem formato fechado: a mesma pasta abre no VS Code, vai para o Git ou para qualquer outro editor.</p>
+      <p class="muted" style="margin-top:14px">Desenvolvido pela Dynalist Inc. e lançado em 2020, ele é mantido pelos próprios usuários (sem investidores) e virou referência em gestão de conhecimento pessoal (PKM).</p>
+    </div>
+    <div class="md" style="align-self:center"><span class="y">📁 CompiuterZ/        ← vault = uma pasta comum</span>
+<span class="y">└─ Casos de uso/</span>
+<span class="y">   └─ UC10 - Candidatar-se.md</span>
+
+<span class="y">---</span>
+<span class="y">tipo: caso-de-uso</span>
+<span class="y">ator: Usuário</span>
+<span class="y">---</span>
+<span class="h"># UC10 – Candidatar-se a Oportunidade</span>
+Requisito: <span class="l">[[RF17]]</span>
+Regras: <span class="l">[[RN13]]</span>, <span class="l">[[RN14]]</span>, <span class="l">[[RN25]]</span>
+Pré-condição: detalhes exibidos em <span class="l">[[UC09]]</span>
+<span class="t">#especificação</span> <span class="t">#oportunidades</span></div>
+  </div>
+</section>
+
+<!-- 4 CARACTERÍSTICAS -->
+<section class="slide center" data-title="Características">
+  <div class="kicker">Características</div>
+  <h2>Principais características</h2>
+  <div class="grid g3">
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><h3>Local-first</h3><p>As notas ficam no seu computador, em arquivos .md. Funciona sem internet e sem depender de servidor.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></div><h3>Links bidirecionais</h3><p>Ligar a nota A à B com <code>[[B]]</code> cria também o caminho de volta (backlink). O conhecimento vira uma rede.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg></div><h3>Gratuito</h3><p>Grátis inclusive para uso comercial desde fev/2025. Só serviços opcionais (Sync, Publish) são pagos.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M17.5 14v7M14 17.5h7"/></svg></div><h3>Extensível</h3><p>Plugins oficiais (core) e milhares de plugins da comunidade: Git, Kanban, Tasks, calendários, temas…</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="14" height="10" rx="1"/><rect x="17" y="8" width="5" height="11" rx="1"/><path d="M6 18h6"/></svg></div><h3>Multiplataforma</h3><p>Windows, macOS, Linux, Android e iOS, com a mesma interface.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><h3>Privacidade e formato aberto</h3><p>Seus dados não ficam presos à ferramenta. Se o Obsidian sumir amanhã, os arquivos continuam legíveis.</p></div>
+  </div>
+</section>
+
+<!-- 5 FUNCIONALIDADES -->
+<section class="slide center" data-title="Funcionalidades">
+  <div class="kicker">Funcionalidades</div>
+  <h2>O que dá para fazer</h2>
+  <div class="grid g4">
+    <div class="card"><h3>🔗 Links e backlinks</h3><p><code>[[nota]]</code> liga notas; o painel de backlinks mostra quem cita a nota atual.</p></div>
+    <div class="card"><h3>🕸️ Graph view</h3><p>Visualiza o vault como um grafo de notas e conexões.</p></div>
+    <div class="card"><h3>🧾 Properties</h3><p>Metadados em YAML no topo da nota (tipo, ator, status, data…).</p></div>
+    <div class="card"><h3>🗃️ Bases</h3><p>Plugin core (2025) que transforma notas em tabelas/cartões filtráveis, como um banco de dados.</p></div>
+    <div class="card"><h3>🎨 Canvas</h3><p>Quadro infinito para organizar notas, imagens e cartões com setas. Formato aberto JSON Canvas.</p></div>
+    <div class="card"><h3>📐 Diagramas Mermaid</h3><p>Fluxogramas, sequência, classes e estados escritos em texto e renderizados na nota.</p></div>
+    <div class="card"><h3>🧩 Templates</h3><p>Modelos prontos: ata de reunião, caso de uso, requisito. Padroniza o grupo.</p></div>
+    <div class="card"><h3>☁️ Sync / Publish</h3><p>Opcionais pagos: sincronização criptografada e site público das notas. Alternativa grátis: Git.</p></div>
+  </div>
+  <p class="muted" style="margin-top:18px;font-size:15px">Nos próximos slides, cada funcionalidade aparece aplicada ao CompiuterZ, com demos que você pode clicar.</p>
+</section>
+
+<!-- 6 DEMO VAULT -->
+<section class="slide" data-title="Demo: vault">
+  <div class="kicker">Exemplo de uso no projeto · Links e backlinks</div>
+  <h2 style="margin-bottom:12px">O documento do CompiuterZ como vault</h2>
+  <p class="muted" style="margin-bottom:12px;font-size:15px">Clique nos links roxos ou nos backlinks. Cada UC, RF e RN do nosso documento virou uma nota, com as ligações reais da seção 12.</p>
+  <div class="fill"><div class="app">
+    <div class="pane tree" id="tree"></div>
+    <div class="pane note" id="note"></div>
+    <div class="pane"><div class="ptitle">Backlinks</div><div id="backlinks"></div></div>
+  </div></div>
+</section>
+
+<!-- 7 GRAFO -->
+<section class="slide" data-title="Demo: grafo">
+  <div class="kicker">Exemplo de uso no projeto · Graph view</div>
+  <h2 style="margin-bottom:12px">Rastreabilidade em forma de grafo</h2>
+  <p class="muted" style="margin-bottom:12px;font-size:15px">Passe o mouse ou clique num nó para ver as ligações. Arraste para mover. Nós soltos ou muito conectados mostram lacunas e pontos críticos da especificação.</p>
+  <div class="fill"><div class="graphwrap">
+    <svg id="graph"></svg>
+    <div class="legend" id="legend"></div>
+    <div class="ginfo" id="ginfo">Clique em um nó para ver os detalhes.</div>
+  </div></div>
+</section>
+
+<!-- 8 BASES -->
+<section class="slide" data-title="Demo: Bases">
+  <div class="kicker">Exemplo de uso no projeto · Properties + Bases</div>
+  <h2 style="margin-bottom:12px">Painel de requisitos, sem planilha à parte</h2>
+  <div class="split fill" style="grid-template-columns:1.6fr 1fr">
+    <div style="display:flex;flex-direction:column;min-height:0">
+      <div class="btool">
+        <input id="bq" placeholder="Filtrar por texto, ex.: oportunidade, trilha, empresa…">
+        <select id="bator"><option value="">Todos os atores</option></select>
+        <span class="pill" id="bcount"></span>
+      </div>
+      <div class="tbl fill"><table><thead><tr><th data-k="id">Req.</th><th data-k="txt">Descrição</th><th data-k="uc">Caso de uso</th><th data-k="ator">Ator</th><th data-k="nrn">Regras</th></tr></thead><tbody id="btbody"></tbody></table></div>
+    </div>
+    <div>
+      <p class="muted" style="font-size:15px;margin-bottom:10px">Cada requisito é uma nota com <b>properties</b>. Um arquivo <code>.base</code> consulta essas notas e gera a tabela, que se atualiza sozinha quando uma nota muda.</p>
+      <div class="yaml"><span class="c"># Requisitos.base</span>
+<span class="k">filters</span>:
+  <span class="k">and</span>:
+    - <span class="s">file.inFolder("Requisitos")</span>
+    - <span class="s">tipo == "funcional"</span>
+<span class="k">views</span>:
+  - <span class="k">type</span>: <span class="s">table</span>
+    <span class="k">name</span>: <span class="s">Por caso de uso</span>
+    <span class="k">groupBy</span>: <span class="s">caso_de_uso</span>
+    <span class="k">order</span>:
+      - <span class="s">file.name</span>
+      - <span class="s">descricao</span>
+      - <span class="s">ator</span></div>
+      <p class="muted" style="font-size:13px;margin-top:10px">Clique no cabeçalho para ordenar.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 CANVAS -->
+<section class="slide" data-title="Demo: Canvas">
+  <div class="kicker">Exemplo de uso no projeto · Canvas</div>
+  <h2 style="margin-bottom:12px">Arquitetura do CompiuterZ num Canvas</h2>
+  <p class="muted" style="margin-bottom:12px;font-size:15px">Arraste os cartões: as setas acompanham. No Obsidian, cada cartão pode ser uma nota real do vault (ex.: o RNF que justifica a escolha).</p>
+  <div class="fill"><div class="canvas" id="canvas"><svg id="cedges"></svg></div></div>
+</section>
+
+<!-- 10 MERMAID -->
+<section class="slide" data-title="Demo: diagramas">
+  <div class="kicker">Exemplo de uso no projeto · Diagramas Mermaid</div>
+  <h2 style="margin-bottom:12px">Diagrama de atividades do UC03 escrito em texto</h2>
+  <div class="split fill" style="grid-template-columns:1fr 1.2fr">
+    <div>
+      <p class="muted" style="font-size:15px;margin-bottom:10px">O fluxo do questionário de perfil (UC03, seção 13.2) escrito em Mermaid dentro de uma nota. Mudou o cenário? Edita-se o texto, e o diagrama e o histórico no Git acompanham.</p>
+      <div class="yaml" id="mmCode" style="font-size:12px"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;min-height:0"><div id="mmView" class="fill"><p class="muted">Carregando diagrama…</p></div></div>
+  </div>
+</section>
+
+<!-- 11 PROCESSO -->
+<section class="slide" data-title="No processo">
+  <div class="kicker">Exemplo de uso no projeto · Processo</div>
+  <h2 style="margin-bottom:14px">Como o Obsidian entra em cada etapa</h2>
+  <div class="steps" id="steps"></div>
+  <div class="stepbody" id="stepbody"></div>
+</section>
+
+<!-- 12 PRÓS E CONTRAS -->
+<section class="slide center" data-title="Prós e contras">
+  <div class="kicker">Análise</div>
+  <h2>Vantagens e limitações para o grupo</h2>
+  <div class="grid g2">
+    <div class="card"><h3 style="color:var(--at)">Vantagens</h3><ul class="pc pros">
+      <li>Rastreabilidade RF ↔ RN ↔ UC automática, via links</li>
+      <li>Grátis e offline; texto puro versionável no Git</li>
+      <li>Documentação perto do código (pode viver no mesmo repositório)</li>
+      <li>Diagramas e tabelas gerados a partir do texto</li>
+      <li>Sem dependência de fornecedor (formato aberto)</li>
+    </ul></div>
+    <div class="card"><h3 style="color:var(--rn)">Limitações</h3><ul class="pc cons">
+      <li>Colaboração em tempo real não é nativa (precisa de Git ou Sync pago)</li>
+      <li>Curva de aprendizado: Markdown, YAML, plugins</li>
+      <li>Não substitui ferramentas específicas: protótipos (Figma) e UML completa (Astah/StarUML)</li>
+      <li>Mermaid não tem diagrama de casos de uso nativo</li>
+      <li>Plugins da comunidade variam em qualidade e manutenção</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- 13 CONCLUSÃO -->
+<section class="slide center" data-title="Conclusão">
+  <div class="kicker">Conclusão</div>
+  <h2>Por que usar no CompiuterZ?</h2>
+  <p class="big">Nosso documento já é uma rede: cada caso de uso aponta para requisitos e regras. O Obsidian torna essa rede <span class="hl">navegável, visual e verificável</span>, sem custo e em arquivos que o grupo controla.</p>
+  <div class="grid g3" style="margin-top:28px">
+    <div class="card"><h3>Especificação viva</h3><p>Mudar uma regra mostra na hora todos os UCs afetados pelos backlinks.</p></div>
+    <div class="card"><h3>Memória do grupo</h3><p>Atas, decisões e justificativas ficam ligadas ao que motivaram.</p></div>
+    <div class="card"><h3>Complementar</h3><p>Funciona ao lado de Figma, Astah e Jira, como o "hub" que liga tudo.</p></div>
+  </div>
+</section>
+
+<!-- 14 FONTES -->
+<section class="slide center" data-title="Fontes">
+  <div class="kicker">Fontes</div>
+  <h2>Referências</h2>
+  <ul class="src">
+    <li>OBSIDIAN. <i>Obsidian</i> (site oficial). <a href="https://obsidian.md" target="_blank" rel="noopener">obsidian.md</a> <span>· acesso em nov. 2026</span></li>
+    <li>OBSIDIAN. <i>Obsidian Help</i>: documentação oficial (links, graph view, properties, canvas, bases). <a href="https://help.obsidian.md" target="_blank" rel="noopener">help.obsidian.md</a></li>
+    <li>OBSIDIAN. <i>Pricing</i> e <i>License overview</i>. <a href="https://obsidian.md/pricing" target="_blank" rel="noopener">obsidian.md/pricing</a> · <a href="https://obsidian.md/license" target="_blank" rel="noopener">obsidian.md/license</a></li>
+    <li>OBSIDIAN. <i>Changelog: Desktop v1.9.10</i> (lançamento do Bases), ago. 2025. <a href="https://obsidian.md/changelog/2025-08-18-desktop-v1.9.10" target="_blank" rel="noopener">obsidian.md/changelog</a></li>
+    <li>JSON CANVAS. <i>An open file format for infinite canvas data</i>. <a href="https://jsoncanvas.org" target="_blank" rel="noopener">jsoncanvas.org</a></li>
+    <li>MERMAID. <i>Diagramming and charting tool</i>. <a href="https://mermaid.js.org" target="_blank" rel="noopener">mermaid.js.org</a></li>
+    <li>VINZENT03. <i>obsidian-git</i> (plugin da comunidade). <a href="https://github.com/Vinzent03/obsidian-git" target="_blank" rel="noopener">github.com/Vinzent03/obsidian-git</a></li>
+    <li>MELLEK, A. C. F. et al. <i>CompiuterZ: Projeto de Software</i>, versão 1.0. Blumenau: FURB, 2026.</li>
+  </ul>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prevBtn" aria-label="Anterior">←</button>
+  <button id="nextBtn" aria-label="Próximo">→</button>
+  <div class="dots" id="dots"></div>
+  <button id="fsBtn" title="Tela cheia (F)">⛶</button>
+  <span class="count" id="count"></span>
+</div>
+
+<script>
+/* ===================== DADOS REAIS DO DOCUMENTO ===================== */
+const RF = {
+RF01:"O sistema deve permitir o gerenciamento de usuários.",
+RF02:"O sistema deve permitir o gerenciamento do perfil profissional dos usuários.",
+RF03:"O sistema deve permitir o gerenciamento das áreas de interesse dos usuários.",
+RF04:"O sistema deve permitir o registro do currículo online dos usuários.",
+RF05:"O sistema deve permitir a consulta de trilhas de capacitação disponíveis.",
+RF06:"O sistema deve permitir a visualização dos cursos associados a uma trilha de capacitação.",
+RF07:"O sistema deve permitir que os usuários realizem questionário de descoberta de perfil profissional.",
+RF08:"O sistema deve recomendar trilha de capacitação para o usuário de acordo com o resultado do questionário.",
+RF09:"O sistema deve permitir a consulta de cursos por área de conhecimento.",
+RF10:"O sistema deve permitir o registro do progresso dos usuários nas trilhas de capacitação.",
+RF11:"O sistema deve permitir a consulta do progresso dos usuários nas trilhas de capacitação.",
+RF12:"O sistema deve permitir que empresas parceiras cadastrem cursos gratuitos.",
+RF13:"O sistema deve permitir que os usuários consultem cursos gratuitos disponibilizados por empresas parceiras.",
+RF14:"O sistema deve permitir a consulta de oportunidades profissionais.",
+RF15:"O sistema deve permitir a aplicação de filtros na pesquisa de oportunidades.",
+RF16:"O sistema deve permitir a visualização dos detalhes de uma oportunidade profissional.",
+RF17:"O sistema deve permitir que o usuário se candidate a uma oportunidade.",
+RF18:"O sistema deve permitir que o usuário consulte suas candidaturas.",
+RF19:"O sistema deve permitir que o usuário salve oportunidades para consulta posterior.",
+RF20:"O sistema deve recomendar cursos e trilhas de capacitação com base no perfil do usuário.",
+RF21:"O sistema deve recomendar oportunidades profissionais com base no perfil do usuário.",
+RF22:"O sistema deve permitir o cadastro de empresas parceiras.",
+RF23:"O sistema deve permitir o gerenciamento de empresas parceiras.",
+RF24:"O sistema deve permitir que empresas parceiras cadastrem oportunidades profissionais.",
+RF25:"O sistema deve permitir que empresas parceiras gerenciem oportunidades profissionais.",
+RF26:"O sistema deve permitir que empresas parceiras pesquisem usuários com base em áreas de interesse e competências.",
+RF27:"O sistema deve permitir que empresas parceiras filtrem os usuários.",
+RF28:"O sistema deve permitir que empresas parceiras visualizem os perfis profissionais dos usuários encontrados.",
+RF29:"O sistema deve permitir que empresas parceiras consultem as candidaturas recebidas em suas oportunidades."};
+const RN = {
+RN01:"Cada usuário deverá possuir uma única conta na plataforma.",
+RN02:"Um usuário poderá cadastrar uma ou mais áreas de interesse profissional.",
+RN03:"As áreas de interesse informadas pelo usuário poderão ser utilizadas pelo sistema para gerar recomendações de cursos e oportunidades.",
+RN04:"Uma trilha de capacitação deverá possuir pelo menos um curso associado.",
+RN05:"Um curso poderá pertencer a uma ou mais trilhas de capacitação.",
+RN06:"O questionário recomendará apenas uma trilha de capacitação a cada vez que for realizado.",
+RN07:"O questionário poderá ser realizado mais de uma vez.",
+RN08:"O progresso de uma trilha deverá ser calculado com base nos cursos concluídos pelo usuário.",
+RN09:"Cursos oferecidos por empresas parceiras deverão ser disponibilizados gratuitamente aos usuários.",
+RN10:"A empresa responsável pelo curso será responsável pelas informações apresentadas sobre o conteúdo, carga horária, requisitos do curso e certificação.",
+RN11:"Toda oportunidade profissional deverá estar vinculada a uma empresa parceira cadastrada.",
+RN12:"Uma oportunidade deverá possuir título, descrição, área de atuação e requisitos.",
+RN13:"O usuário somente poderá se candidatar a oportunidades que estejam abertas para candidatura.",
+RN14:"Um usuário não poderá realizar mais de uma candidatura para a mesma oportunidade.",
+RN15:"Somente empresas parceiras autenticadas poderão realizar pesquisas de usuários.",
+RN16:"A pesquisa de usuários deverá permitir a utilização de critérios relacionados às áreas de interesse e competências cadastradas.",
+RN17:"A empresa somente poderá visualizar as informações profissionais que estiverem disponíveis para consulta por empresas.",
+RN18:"A pesquisa de usuários não deverá permitir o acesso a informações pessoais que não sejam necessárias para fins profissionais.",
+RN19:"Somente empresas parceiras cadastradas e autorizadas poderão publicar oportunidades profissionais.",
+RN20:"Somente empresas parceiras cadastradas e autorizadas poderão disponibilizar cursos gratuitos.",
+RN21:"Uma empresa poderá gerenciar somente as oportunidades e cursos cadastrados por ela.",
+RN22:"A empresa será responsável pelas informações e requisitos apresentados nas oportunidades e cursos que publicar.",
+RN23:"As recomendações de cursos deverão considerar as áreas de interesse e competências informadas pelo usuário.",
+RN24:"As recomendações de oportunidades deverão considerar a compatibilidade entre o perfil do usuário e os requisitos da oportunidade.",
+RN25:"A recomendação de uma oportunidade não garante que o usuário seja selecionado pela empresa.",
+RN26:"A plataforma não será responsável pela decisão final dos processos seletivos realizados pelas empresas."};
+// [nome, ator, RFs, RNs]  (seção 12 do documento)
+const UC = {
+UC01:["Manter Conta","Usuário",["RF01"],["RN01"]],
+UC02:["Manter Perfil Profissional","Usuário",["RF02","RF03","RF04"],["RN02","RN03","RN17"]],
+UC03:["Realizar Questionário de Perfil","Usuário",["RF07","RF08"],["RN06","RN07"]],
+UC04:["Consultar Trilhas de Capacitação","Usuário",["RF05","RF06"],["RN04","RN05"]],
+UC05:["Consultar Cursos","Usuário",["RF09","RF13"],["RN09","RN10"]],
+UC06:["Registrar Progresso na Trilha","Usuário",["RF10"],["RN08"]],
+UC07:["Consultar Progresso","Usuário",["RF11"],["RN08"]],
+UC08:["Visualizar Recomendações","Usuário",["RF20","RF21"],["RN03","RN23","RN24","RN25"]],
+UC09:["Consultar Oportunidades","Usuário",["RF14","RF15","RF16"],["RN11","RN12"]],
+UC10:["Candidatar-se a Oportunidade","Usuário",["RF17"],["RN13","RN14","RN25"]],
+UC11:["Salvar Oportunidade","Usuário",["RF19"],[]],
+UC12:["Consultar Candidaturas","Usuário",["RF18"],["RN26"]],
+UC13:["Manter Perfil Empresarial","Empresa Parceira",["RF22"],["RN19","RN20"]],
+UC14:["Manter Cursos Gratuitos","Empresa Parceira",["RF12"],["RN09","RN10","RN20","RN21","RN22"]],
+UC15:["Manter Oportunidades","Empresa Parceira",["RF24","RF25"],["RN11","RN12","RN19","RN21","RN22"]],
+UC16:["Pesquisar Usuários","Empresa Parceira",["RF26","RF27","RF28"],["RN15","RN16","RN17","RN18"]],
+UC17:["Consultar Candidaturas Recebidas","Empresa Parceira",["RF29"],["RN21","RN26"]],
+UC18:["Gerenciar Empresas Parceiras","Administrador",["RF23"],["RN19","RN20"]]};
+const ATORES = {"Usuário":"Representa as personas (Cleber, Genésio e Sebastiã): jovem iniciando em TI, profissional em atualização e profissional em transição de carreira.","Empresa Parceira":"Divulga cursos e oportunidades e pesquisa candidatos.","Administrador":"Autoriza as empresas parceiras (RN19 e RN20)."};
+const UC_EXTRA = {
+UC10:{pre:"Usuário autenticado; detalhes da oportunidade exibidos ([[UC09]]).",passos:["Usuário seleciona “Candidatar-se”.","Sistema verifica se a oportunidade está aberta ([[RN13]]).","Sistema verifica se já existe candidatura ([[RN14]]).","Sistema exibe o resumo do perfil que será enviado.","Usuário confirma a candidatura.","Sistema registra a candidatura com situação “Enviada”.","Sistema exibe a confirmação."],alt:"No passo 4, o usuário pode atualizar o perfil: executa [[UC02]]."},
+UC03:{pre:"Usuário autenticado.",passos:["Usuário acessa o questionário.","Sistema apresenta as perguntas.","Usuário responde e envia.","Sistema valida as respostas.","Sistema calcula e identifica a trilha mais compatível ([[RN06]]).","Sistema exibe a trilha e seus cursos ([[UC04]]).","Usuário confirma o início da trilha.","Sistema vincula a trilha com progresso de 0% ([[UC06]])."],alt:"No passo 7, o usuário pode refazer o questionário ([[RN07]])."}};
+
+/* ===================== NOTAS DO VAULT ===================== */
+const notes = {}; // id -> {folder,title,props,body(html with [[ ]]) , links:Set}
+function addNote(id,folder,title,props,body){notes[id]={id,folder,title,props,body,links:new Set()}}
+addNote("CompiuterZ","","🏠 CompiuterZ",{tipo:"índice",versão:"1.0"},
+`<p>Site que oferece trilhas de capacitação personalizadas e conecta o desenvolvimento de habilidades a vagas compatíveis.</p>
+<p><b>Objetivos:</b> facilitar acesso a cursos e trilhas, organizar o perfil profissional e conectar a oportunidades.</p>
+<p><b>Atores:</b> [[Usuário]] · [[Empresa Parceira]] · [[Administrador]]</p>
+<p><b>Por onde começar:</b> [[UC03]] (questionário) e [[UC10]] (candidatura) são os fluxos principais (seção 13).</p>
+<p><b>Reuniões:</b> [[Ata 2026-09-03]]</p>`);
+for(const a in ATORES){
+  const ucs=Object.entries(UC).filter(([k,v])=>v[1]===a).map(([k])=>`[[${k}]]`).join(" · ");
+  addNote(a,"Atores",a,{tipo:"ator"},`<p>${ATORES[a].replace(/(RN\d\d)/g,"[[$1]]")}</p><p><b>Casos de uso:</b> ${ucs}</p>`);
+}
+for(const k in UC){
+  const [nome,ator,rfs,rns]=UC[k]; const ex=UC_EXTRA[k];
+  let b=`<p><b>Ator:</b> [[${ator}]]</p><p><b>Requisitos:</b> ${rfs.map(r=>`[[${r}]]`).join(", ")}${rns.length?`<br><b>Regras:</b> ${rns.map(r=>`[[${r}]]`).join(", ")}`:""}</p>`;
+  if(ex){b+=`<p><b>Pré-condições:</b> ${ex.pre}</p><p><b>Cenário principal</b></p><ol>${ex.passos.map(p=>`<li>${p}</li>`).join("")}</ol><p><b>Alternativo:</b> ${ex.alt}</p>`}
+  else b+=`<p class="muted">Cenários descritos na seção 12 do documento.</p>`;
+  addNote(k,"Casos de uso",`${k} – ${nome}`,{tipo:"caso-de-uso",ator,status:"especificado"},b);
+}
+for(const k in RF){addNote(k,"Requisitos/Funcionais",k,{tipo:"funcional"},`<p>${RF[k]}</p>`)}
+for(const k in RN){addNote(k,"Regras de negócio",k,{tipo:"regra"},`<p>${RN[k]}</p>`)}
+addNote("Ata 2026-09-03","Reuniões","Ata 2026-09-03",{tipo:"ata",participantes:"5"},
+`<p class="muted">(nota de exemplo)</p><p><b>Decisões</b></p><ul><li>Fechar a descrição de [[UC10]] com as exceções de [[RN13]] e [[RN14]].</li><li>Revisar [[RN25]]: deixar claro que a recomendação não garante contratação.</li></ul><p><b>Tarefas</b></p><ul><li>☐ Diagrama de atividades do [[UC03]]</li><li>☑ Protótipo da tela de vagas (Figma)</li></ul>`);
+
+// computa links
+for(const id in notes){const m=notes[id].body.matchAll(/\[\[([^\]]+)\]\]/g);for(const x of m) if(notes[x[1]]&&x[1]!==id) notes[id].links.add(x[1])}
+function backlinksOf(id){return Object.values(notes).filter(n=>n.links.has(id))}
+function linkify(html){return html.replace(/\[\[([^\]]+)\]\]/g,(m,t)=>notes[t]?`<a class="wl" data-n="${t}">${t}</a>`:t)}
+
+/* ===================== DEMO VAULT ===================== */
+let cur="UC10";
+function buildTree(){
+  const folders={};
+  for(const n of Object.values(notes)){(folders[n.folder]=folders[n.folder]||[]).push(n)}
+  const order=["","Atores","Casos de uso","Requisitos/Funcionais","Regras de negócio","Reuniões"];
+  let h=`<div class="ptitle">📁 CompiuterZ</div>`;
+  for(const f of order){
+    const list=folders[f]; if(!list)continue;
+    const items=list.map(n=>`<span class="f" data-n="${n.id}">📄 ${n.folder==="Casos de uso"?n.title:n.id}</span>`).join("");
+    if(f==="") h+=items; else h+=`<details ${["Casos de uso","Reuniões"].includes(f)?"open":""}><summary>${f}</summary>${items}</details>`;
+  }
+  document.getElementById("tree").innerHTML=h;
+}
+function openNote(id){
+  cur=id; const n=notes[id];
+  document.querySelectorAll("#tree .f").forEach(e=>e.classList.toggle("on",e.dataset.n===id));
+  const props=Object.entries(n.props).map(([k,v])=>`<span>${k}</span><span>${v}</span>`).join("");
+  document.getElementById("note").innerHTML=`<div class="crumbs">CompiuterZ / ${n.folder||""}</div><h4>${n.title}</h4><div class="props">${props}</div>${linkify(n.body)}`;
+  const bl=backlinksOf(id);
+  document.getElementById("backlinks").innerHTML=bl.length?bl.map(b=>`<div class="bl" data-n="${b.id}">${b.title}<small>${b.folder||"raiz"}</small></div>`).join(""):`<p class="muted" style="font-size:13px">Nenhuma nota aponta para cá.</p>`;
+  const tf=document.querySelector(`#tree .f[data-n="${CSS.escape(id)}"]`);
+  if(tf){const d=tf.closest("details");if(d)d.open=true}
+  document.getElementById("note").scrollTop=0;
+}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-n]");if(t&&t.closest("#slideVault,.app,.tbl,.ginfo")){openNote(t.dataset.n);if(!t.closest(".app"))go(slideIndex("Demo: vault"))}});
+
+/* ===================== GRAFO ===================== */
+const COLORS={uc:"#38bdf8",rf:"#a88bfa",rn:"#f59e0b",at:"#34d399",ot:"#e5e7eb"};
+const typeOf=id=>id.startsWith("UC")?"uc":id.startsWith("RF")?"rf":id.startsWith("RN")?"rn":ATORES[id]?"at":"ot";
+const TNAME={uc:"Casos de uso",rf:"Req. funcionais",rn:"Regras de negócio",at:"Atores",ot:"Outras"};
+const gNodes=[],gEdges=[],visible={uc:1,rf:1,rn:1,at:1,ot:1};
+let gSel=null,gHover=null,gStarted=false;
+function initGraph(){
+  const svg=document.getElementById("graph");
+  for(const id in notes){gNodes.push({id,t:typeOf(id),x:Math.random()*900+150,y:Math.random()*350+60,vx:0,vy:0})}
+  const idx=Object.fromEntries(gNodes.map((n,i)=>[n.id,i]));
+  for(const id in notes)for(const l of notes[id].links){const a=idx[id],b=idx[l];if(!gEdges.some(e=>(e.a===b&&e.b===a)))gEdges.push({a,b})}
+  gNodes.forEach(n=>n.deg=gEdges.filter(e=>gNodes[e.a]===n||gNodes[e.b]===n).length);
+  document.getElementById("legend").innerHTML=Object.keys(TNAME).map(t=>`<label><input type="checkbox" checked data-t="${t}" style="display:none"><i style="background:${COLORS[t]}"></i>${TNAME[t]}</label>`).join("");
+  document.querySelectorAll("#legend input").forEach(c=>c.onchange=()=>{visible[c.dataset.t]=c.checked;c.parentElement.style.opacity=c.checked?1:.4;drawGraph()});
+  svg.innerHTML=`<g id="ge"></g><g id="gn"></g>`;
+  const gn=svg.querySelector("#gn"),ge=svg.querySelector("#ge");
+  gEdges.forEach(e=>{e.el=document.createElementNS("http://www.w3.org/2000/svg","line");ge.appendChild(e.el)});
+  gNodes.forEach(n=>{
+    const g=document.createElementNS("http://www.w3.org/2000/svg","g");
+    const r=4+Math.sqrt(n.deg)*2.4; n.r=r;
+    g.innerHTML=`<circle r="${r}" fill="${COLORS[n.t]}"></circle><text y="${-r-4}" text-anchor="middle" font-size="10" fill="#a3a3ad" font-family="Inter">${n.id}</text>`;
+    g.style.cursor="pointer";
+    g.onmouseenter=()=>{gHover=n;drawGraph()};g.onmouseleave=()=>{gHover=null;drawGraph()};
+    let drag=false;
+    g.onpointerdown=ev=>{drag=true;n.fixed=true;g.setPointerCapture(ev.pointerId);alpha=Math.max(alpha,.3);ev.stopPropagation()};
+    g.onpointermove=ev=>{if(!drag)return;const p=toSvg(ev);n.x=p.x;n.y=p.y};
+    g.onpointerup=ev=>{drag=false;n.fixed=false;selectNode(n)};
+    n.el=g;gn.appendChild(g);
+  });
+  const ro=new ResizeObserver(()=>{alpha=Math.max(alpha,.2)});ro.observe(svg);
+  tick();
+}
+function toSvg(ev){const r=document.getElementById("graph").getBoundingClientRect();return{x:ev.clientX-r.left,y:ev.clientY-r.top}}
+function selectNode(n){
+  gSel=n;const no=notes[n.id];
+  const nb=neighbors(n);
+  document.getElementById("ginfo").innerHTML=`<b>${no.title}</b><div style="margin:6px 0">${no.body.replace(/<[^>]+>/g," ").replace(/\[\[([^\]]+)\]\]/g,"$1").slice(0,150)}…</div><div>${nb.size} conexões · <a class="wl" data-n="${n.id}">abrir nota →</a></div>`;
+  drawGraph();
+}
+function neighbors(n){const s=new Set();gEdges.forEach(e=>{if(gNodes[e.a]===n)s.add(gNodes[e.b]);if(gNodes[e.b]===n)s.add(gNodes[e.a])});return s}
+let alpha=1;
+function tick(){
+  const svg=document.getElementById("graph");const W=svg.clientWidth||900,H=svg.clientHeight||500;
+  if(alpha>0.005 && document.querySelector(".slide.active [id=graph]")){
+    const vis=gNodes.filter(n=>visible[n.t]);
+    for(let i=0;i<vis.length;i++)for(let j=i+1;j<vis.length;j++){
+      const a=vis[i],b=vis[j];let dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy+.01;const f=2600/d2;const d=Math.sqrt(d2);
+      dx/=d;dy/=d;a.vx-=dx*f;a.vy-=dy*f;b.vx+=dx*f;b.vy+=dy*f}
+    gEdges.forEach(e=>{const a=gNodes[e.a],b=gNodes[e.b];if(!visible[a.t]||!visible[b.t])return;let dx=b.x-a.x,dy=b.y-a.y;const d=Math.sqrt(dx*dx+dy*dy)||1;const f=(d-75)*.025;dx/=d;dy/=d;a.vx+=dx*f;a.vy+=dy*f;b.vx-=dx*f;b.vy-=dy*f});
+    vis.forEach(n=>{n.vx+=(W/2-n.x)*.002;n.vy+=(H/2-n.y)*.004;if(!n.fixed){n.x+=n.vx*alpha;n.y+=n.vy*alpha}n.vx*=.55;n.vy*=.55;n.x=Math.max(20,Math.min(W-20,n.x));n.y=Math.max(30,Math.min(H-15,n.y))});
+    alpha*=.985;drawGraph();
+  }
+  requestAnimationFrame(tick);
+}
+function drawGraph(){
+  const focus=gHover||gSel;const nb=focus?neighbors(focus):null;
+  gEdges.forEach(e=>{const a=gNodes[e.a],b=gNodes[e.b];const v=visible[a.t]&&visible[b.t];e.el.setAttribute("x1",a.x);e.el.setAttribute("y1",a.y);e.el.setAttribute("x2",b.x);e.el.setAttribute("y2",b.y);
+    const on=focus&&(a===focus||b===focus);e.el.setAttribute("stroke",on?"#a88bfa":"#3f3f46");e.el.setAttribute("stroke-width",on?1.8:1);e.el.style.display=v?"":"none";e.el.style.opacity=focus&&!on?.15:.7});
+  gNodes.forEach(n=>{n.el.setAttribute("transform",`translate(${n.x},${n.y})`);n.el.style.display=visible[n.t]?"":"none";const dim=focus&&n!==focus&&!nb.has(n);n.el.style.opacity=dim?.15:1;n.el.querySelector("text").setAttribute("fill",n===focus?"#fff":"#a3a3ad")});
+}
+
+/* ===================== BASES ===================== */
+const rfRows=Object.keys(RF).map(id=>{const e=Object.entries(UC).find(([k,v])=>v[2].includes(id));return{id,txt:RF[id].replace("O sistema deve permitir ","").replace("O sistema deve ",""),uc:e?e[0]:"",ator:e?e[1][1]:"",rns:e?e[1][3]:[],nrn:e?e[1][3].length:0}});
+let bSort={k:"id",d:1};
+function renderBases(){
+  const q=document.getElementById("bq").value.toLowerCase(),a=document.getElementById("bator").value;
+  let rows=rfRows.filter(r=>(!a||r.ator===a)&&(!q||(r.id+r.txt+r.uc+r.ator).toLowerCase().includes(q)));
+  rows.sort((x,y)=>(x[bSort.k]>y[bSort.k]?1:x[bSort.k]<y[bSort.k]?-1:0)*bSort.d);
+  document.getElementById("btbody").innerHTML=rows.map(r=>`<tr><td><a class="wl" data-n="${r.id}">${r.id}</a></td><td>${r.txt}</td><td><span class="chip uc" data-n="${r.uc}" style="cursor:pointer">${r.uc}</span></td><td>${r.ator}</td><td>${r.rns.map(x=>`<span class="chip">${x}</span>`).join("")||"—"}</td></tr>`).join("");
+  document.getElementById("bcount").textContent=`${rows.length} de ${rfRows.length} requisitos`;
+}
+function initBases(){
+  const s=document.getElementById("bator");Object.keys(ATORES).forEach(a=>s.insertAdjacentHTML("beforeend",`<option>${a}</option>`));
+  document.getElementById("bq").oninput=renderBases;s.onchange=renderBases;
+  document.querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{bSort={k:th.dataset.k,d:bSort.k===th.dataset.k?-bSort.d:1};renderBases()});
+  renderBases();
+}
+
+/* ===================== CANVAS ===================== */
+const cCards=[
+ {id:"u",x:.03,y:.08,c:"#34d399",t:"Usuário / Empresa",s:"Navegador: Chrome, Firefox, Edge, Safari (RNF18)"},
+ {id:"f",x:.30,y:.08,c:"#38bdf8",t:"Front-end React",s:"HTML, CSS, JS + React, interface responsiva (RNF01, RNF02, RNF06)"},
+ {id:"b",x:.58,y:.08,c:"#a88bfa",t:"Back-end na AWS",s:"Autenticação e acesso por tipo de usuário (RNF03, RNF10, RNF12)"},
+ {id:"d",x:.58,y:.56,c:"#f59e0b",t:"Amazon Aurora",s:"Banco relacional, backup diário (RNF04, RNF14)"},
+ {id:"r",x:.30,y:.56,c:"#a88bfa",t:"Motor de recomendação",s:"Questionário e perfil → trilhas e vagas (UC03, UC08)"},
+ {id:"n",x:.03,y:.56,c:"#e5e7eb",t:"📝 Nota: desempenho",s:"Resposta em até 3 s e 100 usuários simultâneos (RNF08, RNF09)"}];
+const cLinks=[["u","f","HTTPS"],["f","b","API"],["b","d","SQL"],["b","r",""],["r","d","perfil"],["n","b",""]];
+function initCanvas(){
+  const cv=document.getElementById("canvas");
+  cCards.forEach(c=>{const el=document.createElement("div");el.className="ccard";el.style.setProperty("--c",c.c);el.innerHTML=`<b>${c.t}</b><span>${c.s}</span>`;c.el=el;cv.appendChild(el);
+    let sx,sy,ox,oy,drag=false;
+    el.onpointerdown=e=>{drag=true;el.setPointerCapture(e.pointerId);sx=e.clientX;sy=e.clientY;ox=el.offsetLeft;oy=el.offsetTop;el.style.zIndex=5};
+    el.onpointermove=e=>{if(!drag)return;const W=cv.clientWidth,H=cv.clientHeight;c.x=Math.max(0,Math.min(W-el.offsetWidth,ox+e.clientX-sx))/W;c.y=Math.max(0,Math.min(H-el.offsetHeight,oy+e.clientY-sy))/H;placeCards()};
+    el.onpointerup=()=>{drag=false;el.style.zIndex=""};
+  });
+  new ResizeObserver(placeCards).observe(cv);placeCards();
+}
+function placeCards(){
+  const cv=document.getElementById("canvas"),W=cv.clientWidth,H=cv.clientHeight;
+  cCards.forEach(c=>{c.el.style.left=c.x*W+"px";c.el.style.top=c.y*H+"px"});
+  const by=Object.fromEntries(cCards.map(c=>[c.id,c]));
+  let s=`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8b6cf6"/></marker></defs>`;
+  cLinks.forEach(([a,b,l])=>{const A=by[a].el,B=by[b].el;
+    const ax=A.offsetLeft+A.offsetWidth/2,ay=A.offsetTop+A.offsetHeight/2,bx=B.offsetLeft+B.offsetWidth/2,by_=B.offsetTop+B.offsetHeight/2;
+    const p=edgePt(B,ax,ay),q=edgePt(A,bx,by_);
+    s+=`<line x1="${q.x}" y1="${q.y}" x2="${p.x}" y2="${p.y}" stroke="#8b6cf6" stroke-width="2" ${b==="b"&&a==="n"?'stroke-dasharray="5 5"':""} marker-end="url(#ar)"/>`;
+    if(l)s+=`<text x="${(p.x+q.x)/2}" y="${(p.y+q.y)/2-6}" fill="#a3a3ad" font-size="11" text-anchor="middle" font-family="JetBrains Mono">${l}</text>`});
+  document.getElementById("cedges").innerHTML=s;
+}
+function edgePt(el,fx,fy){const cx=el.offsetLeft+el.offsetWidth/2,cy=el.offsetTop+el.offsetHeight/2,hw=el.offsetWidth/2+4,hh=el.offsetHeight/2+4;const dx=fx-cx,dy=fy-cy;const s=Math.min(hw/Math.abs(dx||1e-6),hh/Math.abs(dy||1e-6));return{x:cx+dx*s,y:cy+dy*s}}
+
+/* ===================== MERMAID ===================== */
+const MM=`flowchart TD
+  A([Início]) --> B[Usuário acessa o questionário]
+  B --> C[Sistema apresenta as perguntas]
+  C --> D[Usuário responde e envia]
+  D --> E{Obrigatórias respondidas?}
+  E -- não --> F[Destacar perguntas pendentes]
+  F --> D
+  E -- sim --> G[Calcular trilha mais compatível<br/>RN06]
+  G --> H[Exibir trilha e cursos]
+  H --> I{Decisão do usuário}
+  I -- refazer RN07 --> C
+  I -- depois --> J[Manter recomendação no perfil]
+  I -- iniciar --> K[Vincular trilha com progresso 0%]
+  J --> Z([Fim])
+  K --> Z`;
+function initMermaid(){
+  document.getElementById("mmCode").textContent="```mermaid\n"+MM+"\n```";
+  const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js";
+  s.onload=async()=>{try{mermaid.initialize({startOnLoad:false,theme:"dark",themeVariables:{primaryColor:"#26262b",primaryBorderColor:"#8b6cf6",primaryTextColor:"#dcddde",lineColor:"#8b6cf6",fontFamily:"Inter"}});const {svg}=await mermaid.render("mm1",MM);document.getElementById("mmView").innerHTML=svg}catch(e){fail()}};
+  s.onerror=fail;document.head.appendChild(s);
+  function fail(){document.getElementById("mmView").innerHTML=`<p class="muted">Não foi possível carregar o Mermaid aqui. No Obsidian, esse bloco aparece renderizado como fluxograma.</p>`}
+}
+
+/* ===================== PROCESSO ===================== */
+const STEPS=[
+ {t:"Concepção",s:"Introdução, objetivos, personas",how:["Nota-índice do projeto com o “É / Não é / Faz / Não faz”.","Uma nota por persona (Cleber, Genésio, Sebastiã), ligada aos UCs que ela usa.","Pesquisa de concorrentes (Kultivi, Educação Livre) com prints e links."],
+  md:`<span class="h"># Persona – Sebastiã</span>
+<span class="y">tipo: persona · idade: 23</span>
+Caixa de supermercado, quer emprego
+flexível em tecnologia.
+
+Usa: <span class="l">[[UC03]]</span> <span class="l">[[UC08]]</span> <span class="l">[[UC10]]</span>
+Relacionada: <span class="l">[[User story – Vagas de emprego]]</span>`},
+ {t:"Requisitos",s:"User stories, RF, RNF, RN",how:["Uma nota por requisito/regra com properties (tipo, status, prioridade).","Painel no Bases para ver tudo filtrado, sem planilha separada.","Backlinks mostram qual UC depende de cada regra."],
+  md:`<span class="y">---</span>
+<span class="y">tipo: regra</span>
+<span class="y">status: aprovada</span>
+<span class="y">---</span>
+<span class="h"># RN14</span>
+Um usuário não poderá realizar mais de
+uma candidatura para a mesma oportunidade.
+
+<span class="y">Backlinks (automático): UC10</span>`},
+ {t:"Modelagem",s:"Casos de uso, atividades",how:["Template de caso de uso padroniza ator, pré/pós-condições e cenários.","Diagramas de atividades em Mermaid dentro da própria nota.","Graph view para achar requisito sem caso de uso (lacuna)."],
+  md:`<span class="h"># Template – Caso de uso</span>
+<span class="y">---</span>
+<span class="y">tipo: caso-de-uso</span>
+<span class="y">ator: </span>
+<span class="y">---</span>
+<span class="h">## Requisitos e regras</span>
+<span class="h">## Pré-condições</span>
+<span class="h">## Cenário principal</span>
+<span class="h">## Cenários alternativos</span>
+<span class="h">## Cenários de exceção</span>`},
+ {t:"Protótipo e arquitetura",s:"Telas, Lean Canvas, AWS",how:["Canvas com prints do Figma ligados aos UCs de cada tela.","Canvas de arquitetura (React, AWS, Aurora) ligado aos RNFs.","Registro de decisões (ADR): por que Aurora, por que React."],
+  md:`<span class="h"># ADR-001 – Banco de dados</span>
+<span class="y">status: aceita · data: 2026-09</span>
+<span class="h">## Decisão</span>
+Amazon Aurora (relacional) <span class="l">[[RNF04]]</span>
+<span class="h">## Motivo</span>
+Dados muito relacionais: usuário ↔
+candidatura ↔ oportunidade ↔ empresa.`},
+ {t:"Desenvolvimento",s:"Código, tarefas, Git",how:["Vault dentro do repositório (/docs): documentação versionada junto com o código.","Plugin Obsidian Git para commit/pull automático entre os 5 integrantes.","Checklists de tarefas ligadas aos RFs; atas de reunião diárias com template."],
+  md:`<span class="h"># Ata 2026-11-16</span>
+<span class="y">participantes: 5</span>
+- [x] Tela de vagas <span class="l">[[RF14]]</span> <span class="l">[[RF15]]</span>
+- [ ] Bloquear candidatura dupla <span class="l">[[RN14]]</span>
+- [ ] Filtro de usuários p/ empresas <span class="l">[[RF27]]</span>
+<span class="t">#sprint-3</span>`}];
+function initSteps(){
+  document.getElementById("steps").innerHTML=STEPS.map((s,i)=>`<div class="step" data-i="${i}">${i+1}. ${s.t}<small>${s.s}</small></div>`).join("");
+  document.querySelectorAll(".step").forEach(el=>el.onclick=()=>showStep(+el.dataset.i));showStep(0);
+}
+function showStep(i){
+  document.querySelectorAll(".step").forEach((e,j)=>e.classList.toggle("on",i===j));const s=STEPS[i];
+  document.getElementById("stepbody").innerHTML=`<div class="card"><h3>Como o Obsidian ajuda</h3><ul style="padding-left:20px;margin-top:8px">${s.how.map(h=>`<li style="margin-bottom:8px">${h}</li>`).join("")}</ul></div><div class="md">${s.md}</div>`;
+}
+
+/* ===================== CAPA (grafo decorativo) ===================== */
+(function(){const g=document.getElementById("coverGraph");let s="";const pts=[];for(let i=0;i<34;i++)pts.push([60+Math.random()*420,30+Math.random()*540]);
+  pts.forEach((p,i)=>pts.forEach((q,j)=>{if(j>i&&Math.hypot(p[0]-q[0],p[1]-q[1])<110)s+=`<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#8b6cf6" stroke-opacity=".35"/>`}));
+  pts.forEach((p,i)=>s+=`<circle cx="${p[0]}" cy="${p[1]}" r="${2+Math.random()*4}" fill="${["#a88bfa","#38bdf8","#f59e0b"][i%3]}" opacity=".85"/>`);g.innerHTML=s})();
+
+/* ===================== NAVEGAÇÃO ===================== */
+const slides=[...document.querySelectorAll(".slide")];let cIdx=0;
+document.querySelector('[data-title="Demo: vault"]').id="slideVault";
+const slideIndex=t=>slides.findIndex(s=>s.dataset.title===t);
+const dots=document.getElementById("dots");
+slides.forEach((s,i)=>{const b=document.createElement("button");b.className="dot";b.title=`${i+1}. ${s.dataset.title}`;b.onclick=()=>go(i);dots.appendChild(b)});
+function go(i){
+  i=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach((s,j)=>{s.classList.toggle("active",j===i);s.classList.toggle("prev",j<i)});
+  [...dots.children].forEach((d,j)=>d.classList.toggle("on",j===i));
+  cIdx=i;document.getElementById("count").textContent=`${i+1} / ${slides.length}`;
+  document.getElementById("progress").style.width=`${(i+1)/slides.length*100}%`;
+  if(slides[i].dataset.title==="Demo: grafo"){if(!gStarted){gStarted=true;initGraph()}alpha=Math.max(alpha,.5)}
+  if(slides[i].dataset.title==="Demo: Canvas")setTimeout(placeCards,50);
+  try{history.replaceState(null,"","#s"+(i+1))}catch(e){}
+}
+document.getElementById("prevBtn").onclick=()=>go(cIdx-1);
+document.getElementById("nextBtn").onclick=()=>go(cIdx+1);
+document.getElementById("fsBtn").onclick=toggleFS;
+function toggleFS(){try{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen()}catch(e){}}
+document.addEventListener("keydown",e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+  if(["ArrowRight","PageDown"," "].includes(e.key)){e.preventDefault();go(cIdx+1)}
+  else if(["ArrowLeft","PageUp"].includes(e.key)){e.preventDefault();go(cIdx-1)}
+  else if(e.key==="Home")go(0);else if(e.key==="End")go(slides.length-1);
+  else if(e.key==="f"||e.key==="F")toggleFS()});
+
+buildTree();openNote("UC10");initBases();initCanvas();initMermaid();initSteps();
+const h=parseInt((location.hash||"").replace("#s",""));go(isNaN(h)?0:h-1);
+</script>
+</body>
+</html>
