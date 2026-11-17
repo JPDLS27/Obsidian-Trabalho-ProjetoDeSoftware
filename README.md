@@ -36,6 +36,10 @@ As demos usam os 18 casos de uso, 29 requisitos funcionais e 26 regras de negóc
 
 > O diagrama Mermaid e a fonte são carregados da internet. Sem conexão, o slide do diagrama mostra o código no lugar do desenho; o resto funciona normalmente.
 
+## Uso de Inteligência Artificial
+
+Esta apresentação foi desenvolvida com auxílio de IA (**Claude**, da Anthropic). A ferramenta foi usada para estruturar os slides, redigir os textos, pesquisar informações sobre o Obsidian e programar as demos interativas, a partir do documento de Projeto de Software do CompiuterZ elaborado pelo grupo.
+
 ## Equipe
 
 - Ana Carolina Fanderuff Mellek
